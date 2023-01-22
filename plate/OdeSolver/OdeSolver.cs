@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RungeKutta
+﻿namespace RungeKutta
 {
     public class OdeSolver : IOdEsolver<double, double>
     {
@@ -37,7 +33,7 @@ namespace RungeKutta
             List<double> initialConditions)
         {
             double h = b - a;
-            while (Math.Abs(b - a) > double.Epsilon)
+            while (a < b/*Math.Abs(b - a) > double.Epsilon*/)
             {
                 var r = CalculateTheResidual(a, initialConditions, h,
                     out List<double> u);
@@ -107,7 +103,7 @@ namespace RungeKutta
         /// <param name="a"> левая граница отрезка </param>
         /// <param name="h"> шаг </param>
         /// <returns> матрица K </returns>
-        private List<List<double>> EvaluateK(List<double> initialConditions, 
+        private List<List<double>> EvaluateK(List<double> initialConditions,
             double a, double h)
         {
             var result = new List<List<double>>

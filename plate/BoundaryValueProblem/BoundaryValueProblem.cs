@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using RungeKutta;
+﻿using RungeKutta;
 
 namespace bem.BoundaryValueProblem
 {
@@ -10,6 +7,7 @@ namespace bem.BoundaryValueProblem
         private readonly List<Func<double, List<double>, double>> _equations;
         private readonly Dictionary<int, double> _leftConditions;
         private readonly Dictionary<int, double> _rightConditions;
+        private readonly double _left_boundary;
         private readonly double _epsilon;
 
 
@@ -47,7 +45,7 @@ namespace bem.BoundaryValueProblem
                 {
                     initials.Add(conditions[i][ii]);
                 }
-                var solution = odeSolver.Solve(0.0, 1.0, initials);
+                var solution = odeSolver.Solve(_left_boundary, 1.0, initials);
                 solutions.Add(solution);
             }
             return solutions;
@@ -87,11 +85,12 @@ namespace bem.BoundaryValueProblem
         }
 
         public BoundaryValueProblem(List<Func<double, List<double>, double>> equations,
-            Dictionary<int, double> leftConditions, Dictionary<int, double> rightConditions, double epsilon)
+            Dictionary<int, double> leftConditions, Dictionary<int, double> rightConditions, double inner = 0, double epsilon = 0.1e-6)
         {
             _equations = equations;
             _leftConditions = leftConditions;
             _rightConditions = rightConditions;
+            _left_boundary = inner;
             _epsilon = epsilon;
         }
     }
