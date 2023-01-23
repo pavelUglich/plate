@@ -24,7 +24,7 @@ List<Func<double, List<double>, double>> system(int n)
     (x, y) => y[1],
     (x, y) => y[2],
     (x, y) => y[3],
-    (x, y) => 1//-1.0/x/x*y[2]-2.0/x*y[3]-kappa*kappa*y[0]+x
+    (x, y) => -1/x/x/x*y[1]+1/x/x*y[2]-2/x*y[3]+1
     };
     /*
     return new List<Func<double, List<double>, double>> {
