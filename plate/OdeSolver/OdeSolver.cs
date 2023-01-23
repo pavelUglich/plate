@@ -13,7 +13,7 @@
         /// <param name="butcherTableau"> таблица Бутчера </param>
         /// <param name="epsilon"> погрешность вычислений</param>
         public OdeSolver(List<Func<double, List<double>, double>> funcs,
-            double[][] butcherTableau, double epsilon = 0.1e-6)
+            double[][] butcherTableau, double epsilon = 0.1e-5)
         {
             Equations = funcs;
             _butcherTableau = butcherTableau;
@@ -33,7 +33,7 @@
             List<double> initialConditions)
         {
             double h = b - a;
-            while (a < b/*Math.Abs(b - a) > double.Epsilon*/)
+            while (a < b && Math.Abs(b - a) > double.Epsilon)
             {
                 var r = CalculateTheResidual(a, initialConditions, h,
                     out List<double> u);
