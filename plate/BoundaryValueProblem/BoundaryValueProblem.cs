@@ -33,12 +33,7 @@ namespace bem.BoundaryValueProblem
         {
             var size = _equations.Count;
             List<List<double>> result = new List<List<double>>(size + 1);
-            List<double> first = new List<double>(_equations.Count);
-            for (int i = 0; i < _equations.Count; i++)
-            {
-                var newValue = _leftConditions.ContainsKey(i) ? _leftConditions[i] : 0;
-                first.Add(newValue);
-            }
+            List<double> first = ConditionsForTheInhomogeneousSystem();
             result.Add(first);
             for (int i = 0; i < size; i++)
             {
@@ -48,6 +43,17 @@ namespace bem.BoundaryValueProblem
                 result.Add(zeros);
             }
             return result;
+        }
+
+        private List<double> ConditionsForTheInhomogeneousSystem()
+        {
+            List<double> first = new List<double>(_equations.Count);
+            for (int i = 0; i < _equations.Count; i++)
+            {
+                var newValue = _leftConditions.ContainsKey(i) ? _leftConditions[i] : 0;
+                first.Add(newValue);
+            }
+            return first;
         }
 
         /// <summary>
@@ -61,7 +67,8 @@ namespace bem.BoundaryValueProblem
             var conditions = InitialConditions();
             var size = conditions.Count;
             List<List<double>> solutions = new List<List<double>>();
-            OdeSolver odeSolver = new OdeSolver(InhomogeneousSystem(), ButcherTableau.Rkf78, _epsilon);
+            OdeSolver odeSolver = new OdeSolver(InhomogeneousSystem(),
+                ButcherTableau.Rkf78, _epsilon);
             var solution = odeSolver.Solve(_left_boundary, 1.0, conditions.First());
             solutions.Add(solution);
             odeSolver = new OdeSolver(_equations, ButcherTableau.Rkf78, _epsilon);
@@ -78,6 +85,33 @@ namespace bem.BoundaryValueProblem
             return solutions;
         }
 
+        private List<Dictionary<double, List<double>>> CauchyProblemSolutions(
+            IEnumerable<double> points)
+        {
+            var conditions = InitialConditions();
+            var size = conditions.Count;
+            List<Dictionary<double, List<double>>> solutions
+                = new List<Dictionary<double, List<double>>>();
+            OdeSolver odeSolver = new OdeSolver(InhomogeneousSystem(),
+                ButcherTableau.Rkf78, _epsilon);
+            var solution = odeSolver.Solve(points, conditions.First());
+            solutions.Add(solution);
+            odeSolver = new OdeSolver(_equations, ButcherTableau.Rkf78,
+                _epsilon);
+            for (int i = 1; i < size; i++)
+            {
+                List<double> initials = new List<double>(_equations.Count);
+                for (int ii = 0; ii < _equations.Count; ii++)
+                {
+                    initials.Add(conditions[i][ii]);
+                }
+                solution = odeSolver.Solve(points, initials);
+                solutions.Add(solution);
+            }
+            return solutions;
+        }
+
+
         /// <summary>
         /// построение вектора начальных условий для решения краевой задачи
         /// </summary>
@@ -85,7 +119,8 @@ namespace bem.BoundaryValueProblem
         /// решения вспомогательных задач Коши на правом конце отрезка
         /// </param>
         /// <returns></returns>
-        private double[] GetTheInitialConditions(IReadOnlyList<List<double>> solutions)
+        private double[] GetTheInitialConditions(
+            IReadOnlyList<List<double>> solutions)
         {
             var size = _rightConditions.Count;
             double[,] matrix = new double[size, size];
@@ -123,6 +158,28 @@ namespace bem.BoundaryValueProblem
             }
             return result;
         }
+
+        public Dictionary<double, List<double>> Solve(IEnumerable<double> points)
+        {
+            var solutions = CauchyProblemSolutions();
+            var initialConditions = GetTheInitialConditions(solutions).ToList();
+            // 1. Решение неоднородной задачи
+            // 2. Решения однородных задач
+            var solutionsNew = CauchyProblemSolutions(points);
+            Dictionary<double, List<double>> result = solutionsNew[0];
+            foreach (var item in result)
+            {
+                for (int i = 1; i < solutionsNew.Count; i++)
+                {
+                    for (int ii = 0; ii < item.Value.Count; ii++)
+                    {
+                        item.Value[ii] += initialConditions[i - 1] * solutionsNew[i][item.Key][ii];
+                    }
+                }
+            }
+            return result;
+        }
+
 
         /// <summary>
         /// система для решения неоднородной задачи

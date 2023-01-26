@@ -28,7 +28,7 @@
         /// </param>
         /// <param name="b"> точка, вкоторой ищутся решения </param>
         /// <param name="initialConditions"> начальные условия </param>
-        /// <returns> решение задачи Коши </returns>
+        /// <returns> решение задачи Коши ев правом конце отрезка</returns>
         public List<double> Solve(double a, double b,
             List<double> initialConditions)
         {
@@ -46,6 +46,31 @@
                 initialConditions = u;
             }
             return initialConditions;
+        }
+
+        /// <summary>
+        /// Метод, строящий решение системы уравнений и возвращающий его в виде
+        /// словаря с решением задачи в наборе точек
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="initialConditions"></param>
+        /// <returns>
+        /// решение задачи Коши в наборе точек
+        /// </returns>
+        public Dictionary<double, List<double>> Solve(IEnumerable<double> points,
+            List<double> initialConditions)
+        {
+            Dictionary<double, List<double>> result =
+                new Dictionary<double, List<double>>();
+            var p = points.OrderBy(p => p).ToList();
+            result.Add(points.First(), initialConditions);
+            for (int i = 1; i < p.Count; i++)
+            {
+                var solution = Solve(p[i - 1], p[i], initialConditions);
+                result.Add(p[i], solution);
+                initialConditions = solution;
+            }
+            return result;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 ﻿using bem.BoundaryValueProblem;
-using RungeKutta;
 
 double nu = 0.3;
 double kappa = 0.0;
@@ -36,8 +35,8 @@ List<Func<double, List<double>, double>> system(int n)
 }
 
 
-OdeSolver odeSolver = new OdeSolver(system(0), ButcherTableau.RungeKuttaFeldberg);
-var ss = odeSolver.Solve(0.000001, 1, new List<double> { 0, 0, 0, 0 });
+//OdeSolver odeSolver = new OdeSolver(system(0), ButcherTableau.RungeKuttaFeldberg);
+//var ss = odeSolver.Solve(0.000001, 1, new List<double> { 0, 0, 0, 0 });
 
 var _system = system(0);
 Dictionary<int, double> left = new Dictionary<int, double> { { 1, 0 }, { 3, 0 } };
