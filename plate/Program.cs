@@ -69,7 +69,7 @@ class Plate
     {
         var equations = system(0, kappa);
         OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg);
-        var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 1, 0, 0, 0 });
+        var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
         var solution2 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 0, 1 });
         Console.WriteLine(kappa);
         return solution1[2] * solution2[3] - solution1[3] * solution2[2];
@@ -96,7 +96,7 @@ class Plate
     //var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
     static void Main()
     {
-        var fr = FrequencyResponse(50.0, 50, x => FrecquencyResponse(x));
+        var fr = FrequencyResponse(50.0, 50, x => FrecquencyEquation(x));
         Tikz.Plot(fr, "plot.txt");
     }
 }
