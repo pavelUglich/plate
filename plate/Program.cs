@@ -1,50 +1,102 @@
-﻿using bem.BoundaryValueProblem;
-
-double nu = 0.3;
-double kappa = 0.0;
-
-double M_phi(int n, double x, List<double> y) =>
-    (1 - nu * nu) / x / x * (n * n * y[0] + x * y[1]) + nu * y[2];
-
-double M_rphi(int n, double x, List<double> y) =>
-    -n / x / x * (1 - nu) * (n * n * y[0] + x * y[1]);
+﻿using bem;
+using bem.BoundaryValueProblem;
+using RungeKutta;
 
 
-double M_rphi_r(int n, double x, List<double> y) =>
-    n * x * (-nu * (n * n / x / x * y[0] + y[1] / x) + y[2]) * (1 - nu);
-
-double Q_phi(int n, double x, List<double> y) =>
-    1 / x * (n * M_phi(n, x, y) + M_rphi_r(n, x, y));
-
-
-List<Func<double, List<double>, double>> system(int n)
+class Plate
 {
-    return new List<Func<double, List<double>, double>> {
-    (x, y) => y[1],
-    (x, y) => y[2],
-    (x, y) => y[3],
-    (x, y) => -1/x/x/x*y[1]+1/x/x*y[2]-2/x*y[3]+1
-    };
-    /*
-    return new List<Func<double, List<double>, double>> {
+    static double nu = 0.3;
+    //static double kappa = 20.0;
+    static double innerRadius = 0.00001;
+
+    static List<Func<double, List<double>, double>> system(int n, double kappa)
+    {
+        return new List<Func<double, List<double>, double>> {
     (x, y) => -y[1],
-    (x, y) => -nu * (n * n / x / x * y[0] + y[1] / x) + y[2],
-    (x, y) => -1 / x * (y[3]-n*M_rphi(n,x,y)-M_phi(n,x,y))+y[3],
-    (x, y) => kappa*kappa*y[0]-y[3]+n*Q_phi(n,x,y)// заглушка
-    };*/
-}
+    (x, y) => -nu*y[1]/x+y[2],
+    (x, y) => (1-nu*nu)*y[1]/x/x-(1-nu)*y[2]/x+y[3],
+    (x, y) => -y[3]/x - kappa*kappa*y[0]
+    };
+    }
+
+    /// <summary>
+    /// амплитудно-частотная характеристика
+    /// </summary>
+    /// <param name="maxKappa">наибольшая частота (построение происходит с нуля)</param>
+    /// <param name="numPoints">количество узловых точек</param>
+    /// <param name="func">функция (АЧХ можно задать аналитическим выражением)</param>
+    /// <returns>АЧХ в виде словаря</returns>
+    static Dictionary<double, double> FrequencyResponse(double maxKappa,
+        int numPoints, Func<double, double> func)
+    {
+        Dictionary<double, double> result = new Dictionary<double, double>();
+        var h = maxKappa / numPoints;
+        for (int i = 0; i < numPoints; i++)
+        {
+            var kappa = i * h;
+            result.Add(kappa, func(kappa));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// перегрузка FrequenceResponse с минимальной частотой
+    /// </summary>
+    /// <param name="minKappa"></param>
+    /// <param name="maxKappa"></param>
+    /// <param name="numPoints"></param>
+    /// <param name="func"></param>
+    /// <returns></returns>    
+    static Dictionary<double, double> FrequencyResponse(double minKappa,
+        double maxKappa, int numPoints, Func<double, double> func)
+    {
+        Dictionary<double, double> result = new Dictionary<double, double>();
+        var h = (maxKappa - minKappa) / numPoints;
+        for (int i = 0; i < numPoints; i++)
+        {
+            var kappa = minKappa + i * h;
+            result.Add(kappa, func(kappa));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// частотное уравнение
+    /// </summary>
+    /// <param name="kappa">максимальная частота</param>
+    /// <returns>ачх в виде списка вещественных чисел</returns>
+    static double FrecquencyEquation(double kappa)
+    {
+        var equations = system(0, kappa);
+        OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg);
+        var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 1, 0, 0, 0 });
+        var solution2 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 0, 1 });
+        Console.WriteLine(kappa);
+        return solution1[2] * solution2[3] - solution1[3] * solution2[2];
+    }
 
 
-//OdeSolver odeSolver = new OdeSolver(system(0), ButcherTableau.RungeKuttaFeldberg);
-//var ss = odeSolver.Solve(0.000001, 1, new List<double> { 0, 0, 0, 0 });
+    /// <summary>
+    /// частотное уравнение
+    /// </summary>
+    /// <param name="kappa">максимальная частота</param>
+    /// <returns>ачх в виде списка вещественных чисел</returns>
+    static double FrecquencyResponse(double kappa)
+    {
+        var equations = system(0, kappa);
+        Dictionary<int, double> left = new Dictionary<int, double> { { 0, 1 }, { 1, 0 } };
+        Dictionary<int, double> right = new Dictionary<int, double> { { 2, 0 }, { 3, 0 } };
+        BoundaryValueProblem boundaryValueProblem = new BoundaryValueProblem(equations, left, right, new Dictionary<int, Func<double, double>>(), innerRadius);
+        Console.WriteLine(kappa);
+        return boundaryValueProblem.Solve()[0];
+    }
 
-var _system = system(0);
-Dictionary<int, double> left = new Dictionary<int, double> { { 1, 0 }, { 3, 0 } };
-Dictionary<int, double> right = new Dictionary<int, double> { { 0, 0 }, { 1, 0 } };
-var inh = new Dictionary<int, Func<double, double>> { { 3, x => 1.0 } };
-BoundaryValueProblem boundaryValueProblem = new BoundaryValueProblem(_system, left, right, inh, 0.00001);
-var sol = boundaryValueProblem.Solve();
-foreach (var item in sol)
-{
-    Console.WriteLine(item);
+
+    //OdeSolver odeSolver = new OdeSolver(system(0), ButcherTableau.RungeKuttaFeldberg);
+    //var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
+    static void Main()
+    {
+        var fr = FrequencyResponse(50.0, 50, x => FrecquencyResponse(x));
+        Tikz.Plot(fr, "plot.txt");
+    }
 }

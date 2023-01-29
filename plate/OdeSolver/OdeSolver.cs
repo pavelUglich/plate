@@ -33,7 +33,7 @@
             List<double> initialConditions)
         {
             double h = b - a;
-            while (a < b && Math.Abs(b - a) > double.Epsilon)
+            while (a < b && Math.Abs(b - a) > this.Epsilon)
             {
                 var r = CalculateTheResidual(a, initialConditions, h,
                     out List<double> u);
@@ -63,7 +63,7 @@
             Dictionary<double, List<double>> result =
                 new Dictionary<double, List<double>>();
             var p = points.OrderBy(p => p).ToList();
-            result.Add(points.First(), initialConditions);
+            result.Add(p.First(), initialConditions);
             for (int i = 1; i < p.Count; i++)
             {
                 var solution = Solve(p[i - 1], p[i], initialConditions);

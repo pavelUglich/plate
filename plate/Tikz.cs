@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-namespace bem
+﻿namespace bem
 {
     class Tikz
     {
@@ -43,7 +39,7 @@ namespace bem
             FileFooter(streamWriter);
         }
 
-        public static void AddTheCurve(IEnumerable<double> numbers, 
+        public static void AddTheCurve(IEnumerable<double> numbers,
             StreamWriter streamWriter, string color = "black", double a = 0, double b = 1)
         {
             streamWriter.Write("\\addplot[line width = 0.25mm, smooth, ");
@@ -72,6 +68,22 @@ namespace bem
             {
                 var x = item.Key.ToString().Replace(',', '.');
                 var y = item.Value.ToString().Replace(',', '.');
+                streamWriter.Write($"({x}, {y})");
+            }
+            streamWriter.Write("};\n");
+            FileFooter(streamWriter);
+        }
+
+
+        public static void Plot(Dictionary<double, List<double>> numbers, int component, string fileName)
+        {
+            FileHeader(fileName, out var streamWriter);
+            streamWriter.Write("\\addplot[line width = 0.25mm, smooth");
+            streamWriter.Write("] plot coordinates{\n");
+            foreach (var item in numbers)
+            {
+                var x = item.Key.ToString().Replace(',', '.');
+                var y = item.Value[component].ToString().Replace(',', '.');
                 streamWriter.Write($"({x}, {y})");
             }
             streamWriter.Write("};\n");

@@ -166,7 +166,7 @@ namespace bem.BoundaryValueProblem
             // 1. Решение неоднородной задачи
             // 2. Решения однородных задач
             var solutionsNew = CauchyProblemSolutions(points);
-            Dictionary<double, List<double>> result = solutionsNew[0];
+            Dictionary<double, List<double>> result = new Dictionary<double, List<double>>(solutionsNew[0]);
             foreach (var item in result)
             {
                 for (int i = 1; i < solutionsNew.Count; i++)
