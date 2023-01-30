@@ -55,6 +55,22 @@
             streamWriter.Write("};\n");
         }
 
+
+        public static void AddTheCurve(Dictionary<double, double> numbers,
+            StreamWriter streamWriter, string color = "black")
+        {
+            streamWriter.Write("\\addplot[line width = 0.25mm, smooth, ");
+            streamWriter.Write($"{color}] plot coordinates{{\n");
+            foreach (var item in numbers)
+            {
+                var x = item.Key.ToString().Replace(',', '.');
+                var y = item.Value.ToString().Replace(',', '.');
+                streamWriter.Write($"({x}, {y})");
+            }
+            streamWriter.Write("};\n");
+        }
+
+
         /// <summary>
         /// график на отрезке от 0 до 1
         /// </summary>
@@ -75,7 +91,8 @@
         }
 
 
-        public static void Plot(Dictionary<double, List<double>> numbers, int component, string fileName)
+        public static void Plot(Dictionary<double, List<double>> numbers,
+            int component, string fileName)
         {
             FileHeader(fileName, out var streamWriter);
             streamWriter.Write("\\addplot[line width = 0.25mm, smooth");
