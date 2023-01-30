@@ -77,26 +77,91 @@ class Plate
 
 
     /// <summary>
-    /// частотное уравнение
+    /// амплитудно-частотная характе
     /// </summary>
     /// <param name="kappa">максимальная частота</param>
     /// <returns>ачх в виде списка вещественных чисел</returns>
     static double FrecquencyResponse(double kappa)
     {
         var equations = system(0, kappa);
-        Dictionary<int, double> left = new Dictionary<int, double> { { 0, 1 }, { 1, 0 } };
-        Dictionary<int, double> right = new Dictionary<int, double> { { 2, 0 }, { 3, 0 } };
-        BoundaryValueProblem boundaryValueProblem = new BoundaryValueProblem(equations, left, right, new Dictionary<int, Func<double, double>>(), innerRadius);
+        Dictionary<int, double> left =
+            new Dictionary<int, double> { { 0, 1 }, { 1, 0 } };
+        Dictionary<int, double> right
+            = new Dictionary<int, double> { { 2, 0 }, { 3, 0 } };
+        BoundaryValueProblem boundaryValueProblem = new BoundaryValueProblem(
+            equations, left, right,
+            new Dictionary<int, Func<double, double>>(), innerRadius);
         Console.WriteLine(kappa);
         return boundaryValueProblem.Solve()[0];
     }
 
+    /// <summary>
+    /// метод секущих
+    /// </summary>
+    /// <param name="a">левый конец отрезка</param>
+    /// <param name="b">правый конец орезка</param>
+    /// <param name="equation">уранение</param>
+    /// <param name="epsilon">погрешность</param>
+    /// <returns>набор корней</returns>
+    static double SecantMethod(double a, double b,
+        Func<double, double> equation, double epsilon = 0.1e-6)
+    {
+        while (Math.Abs(a - b) > epsilon) {
+            var fb = equation(b);
+            var c = b - fb * (b - a) / (fb - equation(a));
+            (a, b) = (b, c);
+        }
+        return b;
+    }
 
-    //OdeSolver odeSolver = new OdeSolver(system(0), ButcherTableau.RungeKuttaFeldberg);
-    //var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
+    /// <summary>
+    /// отыскание корней    
+    /// </summary>
+    /// <param name="maxKappa">максимальная частота</param>
+    /// <param name="h">длина отрезка</param>
+    /// <param name="equation">уравнение</param>
+    /// <returns>набор корней</returns>
+    static List<double> Roots(double maxKappa, double h,
+        Func<double, double> equation)
+    {
+        List<double> result = new List<double>();
+        double a = 0;
+        double b = h;
+        double fa = equation(a);
+        while (a < maxKappa)
+        {
+            double fb = equation(b);
+            if (fa * fb < 0)
+            {
+                result.Add(SecantMethod(a, b, equation));
+            }
+            a = b;
+            fa = fb;
+            b += h;
+        }
+        return result;
+    }
+
+    static Dictionary<double, List<double>> EigenMode(double kappa, IEnumerable<double> points) {
+        var equations = system(0, kappa);
+        OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg);
+        var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
+        var solution2 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 0, 1 });
+        List<double> initials = new List<double> { 0, 0, 1, -solution1[3] / solution2[3] };
+        return odeSolver.Solve(points, initials);
+    }
+
     static void Main()
     {
-        var fr = FrequencyResponse(50.0, 50, x => FrecquencyEquation(x));
-        Tikz.Plot(fr, "plot.txt");
+        var fr = Roots(40, 1.0, x => FrecquencyEquation(x));//FrequencyResponse(50.0, 50, x => FrecquencyEquation(x));
+        var points = new List<double>();
+        int size = 20;
+        var h = (1.0 - innerRadius) / size;
+        for (int i = 0; i <= size; i++)
+        {
+            points.Add(innerRadius + h * i);
+        }
+        var em = EigenMode(fr.First(), points);
+        //Tikz.Plot(fr, "plot.txt");
     }
 }
