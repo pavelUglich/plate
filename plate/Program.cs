@@ -6,9 +6,9 @@ namespace plate
 {
     static class Plate
     {
-        static double nu = 0.3;
+        static double nu = 0.2;
         //static double kappa = 20.0;
-        static double innerRadius = 0.00001;
+        static double innerRadius = 0.001;
 
         static List<Func<double, List<double>, double>> system(int n, double kappa)
         {
@@ -148,7 +148,7 @@ namespace plate
         static Dictionary<double, double> EigenMode(double kappa, IEnumerable<double> points)
         {
             var equations = system(0, kappa);
-            OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg);
+            OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg, 0.1e-8);
             var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
             var solution2 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 0, 1 });
             List<double> initials = new List<double> { 0, 0, solution2[3], -solution1[3] };
