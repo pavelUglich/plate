@@ -148,7 +148,7 @@ namespace plate
         static Dictionary<double, double> EigenMode(double kappa, IEnumerable<double> points)
         {
             var equations = system(0, kappa);
-            OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg, 0.1e-8);
+            OdeSolver odeSolver = new OdeSolver(equations, ButcherTableau.RungeKuttaFeldberg);
             var solution1 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 1, 0 });
             var solution2 = odeSolver.Solve(innerRadius, 1.0, new List<double> { 0, 0, 0, 1 });
             List<double> initials = new List<double> { 0, 0, solution2[3], -solution1[3] };
