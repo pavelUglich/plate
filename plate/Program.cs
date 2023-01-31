@@ -12,12 +12,13 @@ namespace plate
 
         static List<Func<double, List<double>, double>> system(int n, double kappa)
         {
-            return new List<Func<double, List<double>, double>> {
-    (x, y) => -y[1],
-    (x, y) => -nu*y[1]/x+y[2],
-    (x, y) => (1-nu*nu)*y[1]/x/x-(1-nu)*y[2]/x+y[3],
-    (x, y) => -y[3]/x - kappa*kappa*y[0]
-    };
+            return new List<Func<double, List<double>, double>>
+            {
+                (x, y) => -y[1],
+                (x, y) => -nu*y[1]/x+y[2],
+                (x, y) => (1-nu*nu)*y[1]/x/x-(1-nu)*y[2]/x+y[3],
+                (x, y) => -y[3]/x - kappa*kappa*y[0]
+            };
         }
 
         /// <summary>
@@ -159,7 +160,7 @@ namespace plate
 
         static void PlotEigenModes(double maxKappa, string fileName, int points = 20)
         {
-            var eigenFrecquencies = Roots(maxKappa, 0.5, x => FrecquencyEquation(x));
+            var eigenFrecquencies = Roots(maxKappa, 5.0, x => FrecquencyEquation(x));
             Tikz.FileHeader(fileName, out StreamWriter streamWriter);
             var hh = (1 - innerRadius) / points;
             List<double> p = new List<double>();
