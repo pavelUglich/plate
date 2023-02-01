@@ -8,7 +8,7 @@ namespace plate
     {
         static double nu = 0.2;
         //static double kappa = 20.0;
-        static double innerRadius = 0.001;
+        static double innerRadius = 0.015;
 
         static List<Func<double, List<double>, double>> system(int n, double kappa)
         {
